@@ -23,17 +23,20 @@ jobs:
         run: |
           flutter pub get
 
+      # secretsからAPIキーを取得
       - name: Get App Store Connect API Key
         run: |
              mkdir -p ./private_keys
              echo "${{ secrets.APP_STORE_CONNECT_API_KEY }}" > ./private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
-
+     
+      # --no-codesignを指定し、flutter build iosでのビルド時に署名を行わない
       - name: Build ios(xcarchive)
         run: |
           flutter build ios \
           --release \
           --no-codesign
 
+      # xcodebuildでのビルド(アーカイブ)時に署名を行わない
       - name: Archive
         run: |
           xcodebuild archive \
@@ -45,6 +48,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
+      # ここでのパスはプロジェクトに合わせて設定してください
       - name: Embed entitlements
         run: |
           codesign \
@@ -52,6 +56,8 @@ jobs:
           --force \
           --sign "-" build/ios/Runner.xcarchive/Products/Applications/Runner.app
 
+      # Cloud Signingで署名
+      # ここでのパスはプロジェクトに合わせて設定してください
       - name: Export Archive with ExportOptions.plist
         run: |
           xcodebuild -exportArchive \
